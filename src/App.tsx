@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
+
+
 
 /**
  * Cute Countdown – 15 Nov (America/Sao_Paulo)
@@ -12,13 +15,15 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function CuteCountdown() {
   // Target date: 15 Nov 2025, midnight São Paulo time (UTC-03:00)
-  const target = useMemo(() => new Date("2025-11-14T08:00:00-03:00"), []);
+  const target = useMemo(() => new Date("2025-11-03T08:00:00-03:00"), []);
+
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
+
 
   const { days, hours, minutes, seconds, totalMs, done } = useMemo(() => {
     const diff = target.getTime() - now.getTime();
@@ -29,6 +34,28 @@ export default function CuteCountdown() {
     const s = Math.floor((clamped / 1000) % 60);
     return { days: d, hours: h, minutes: m, seconds: s, totalMs: clamped, done: diff <= 0 };
   }, [now, target]);
+
+  useEffect(() => {
+    if (done) {
+      const duration = 5 * 1000;
+      const end = Date.now() + duration;
+
+      (function frame() {
+        confetti({
+          particleCount: 5,
+          startVelocity: 30,
+          spread: 360,
+          ticks: 60,
+          origin: {
+            x: Math.random(),
+            y: Math.random() - 0.2,
+          },
+          colors: ["#ff80bf", "#ffb3d9", "#ffe6f2", "#f472b6", "#f0abfc"],
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+    }
+  }, [done]);
 
   // For progress bar (from component mount until target)
   const [startMs] = useState(() => Date.now());
